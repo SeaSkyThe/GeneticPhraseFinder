@@ -8,13 +8,14 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-const POPULATION_SIZE = 800
+const POPULATION_SIZE = 2000
 const MUTATION_RATE = 0.03
 
 const SCREEN_WIDTH = 1050
 const SCREEN_HEIGHT = 700
 const UPDATE_INTERVAL = time.Millisecond * 5
 const MAX_HISTORY = 25
+const TARGET = "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
 
 func main() {
 
@@ -22,17 +23,13 @@ func main() {
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
-	target := "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
-	population := individual.GeneratePopulation(POPULATION_SIZE, len(target))
-	population.GeneratePopulationFitness(target)
+	population := individual.GeneratePopulation(POPULATION_SIZE, len(TARGET))
+	population.GeneratePopulationFitness(TARGET)
 
 	var pause bool = true
 	var framesCounter int = 0
 	var lastUpdate time.Time
 	var generation int = 0
-
-	// List to store best fitness values of the last MAX_HISTORY generations
-	bestFitnessHistory := make([]individual.Individual, 0, MAX_HISTORY)
 
 	rl.BeginDrawing()
 	defer rl.EndDrawing()
@@ -41,7 +38,7 @@ func main() {
 
 	customFont := rl.LoadFontEx("./RobotoMonoNerdFont-Regular.ttf", 20, nil, 0)
 
-    // customFont := rl.GetFontDefault()
+	// customFont := rl.GetFontDefault()
 
 	for rl.WindowShouldClose() == false {
 		if rl.IsKeyPressed(rl.KeySpace) {
@@ -49,7 +46,7 @@ func main() {
 		}
 
 		mostFit := population.GetMostFit()
-		if !pause && mostFit.Genes != target {
+		if !pause && mostFit.Genes != TARGET {
 			now := time.Now()
 			if now.Sub(lastUpdate) > UPDATE_INTERVAL {
 				mostFit = population.GetMostFit()
@@ -57,31 +54,15 @@ func main() {
 					break
 				}
 
-				population.GeneratePopulationFitness(target)
+				population.GeneratePopulationFitness(TARGET)
 				population.PrintPopulation()
-				// fmt.Printf("\rGeneration: %d | Best Fitness: %.6f | Genes: %s\033[K", generation, mostFit.Fitness, mostFit.Genes)
 				population.GenerateNextGeneration(MUTATION_RATE)
 				generation += 1
-
-				// Update best fitness history
-				if mostFit != nil {
-					bestFitnessHistory = append([]individual.Individual{*mostFit}, bestFitnessHistory...)
-					if len(bestFitnessHistory) > MAX_HISTORY {
-						bestFitnessHistory = bestFitnessHistory[:MAX_HISTORY]
-					}
-				}
 
 				lastUpdate = now
 			}
 		} else {
 			framesCounter += 1
-			if mostFit.Genes == target {
-				// Update best fitness history with the most fit individual
-				bestFitnessHistory = append([]individual.Individual{*mostFit}, bestFitnessHistory...)
-				if len(bestFitnessHistory) > MAX_HISTORY {
-					bestFitnessHistory = bestFitnessHistory[:MAX_HISTORY]
-				}
-			}
 		}
 
 		// Drawing data
@@ -90,22 +71,19 @@ func main() {
 
 		mostFit = population.GetMostFit()
 		if mostFit != nil {
-			// rl.DrawText(fmt.Sprintf("Generation: %d", generation), 10, 10, 20, rl.DarkGray)
-			rl.DrawTextEx(customFont, fmt.Sprintf("Generation: %d", generation), rl.Vector2{10, 10}, 20, 2, rl.DarkGray)
-			// rl.DrawText(fmt.Sprintf("Best Fitness: %.6f", mostFit.Fitness), 10, 40, 20, rl.DarkGray)
-			rl.DrawTextEx(customFont, fmt.Sprintf("Best Fitness: %.6f", mostFit.Fitness), rl.Vector2{10, 40}, 20, 2, rl.DarkGray)
-			// rl.DrawText(fmt.Sprintf("Best %d Genes in Current Generation: ", MAX_HISTORY), 10, 70, 20, rl.DarkGray)
+			rl.DrawTextEx(customFont, fmt.Sprintf("Generation: %d", generation), rl.Vector2{X: 10, Y: 10}, 20, 2, rl.DarkGray)
+			rl.DrawTextEx(customFont, fmt.Sprintf("Best Fitness: %.6f", mostFit.Fitness), rl.Vector2{X: 10, Y: 40}, 20, 2, rl.DarkGray)
 			rl.DrawTextEx(customFont, fmt.Sprintf("Best %d Genes in Current Generation: ", MAX_HISTORY), rl.Vector2{X: 10, Y: 70}, 20, 2, rl.DarkGray)
 
 			for i, ind := range population.GetPopulationOrderedByFitness() {
 				if i < MAX_HISTORY {
 					yPosition := float32(95 + (i * 20))
 					if i == 0 {
-                        if mostFit.Genes == target { 
-                            rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Green)
-                        } else{
-                            rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Black)
-                        }
+						if mostFit.Genes == TARGET{
+							rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Green)
+						} else {
+							rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Black)
+						}
 					} else {
 						rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.DarkGray)
 					}
@@ -123,18 +101,11 @@ func main() {
 
 		rl.DrawFPS(int32(rl.GetScreenWidth())-100, 10)
 
-
-
-        rl.DrawLine(0, SCREEN_HEIGHT-100, SCREEN_WIDTH, SCREEN_HEIGHT-100, rl.DarkGray)
-        rl.DrawTextEx(customFont, fmt.Sprintf("Population size: %d", POPULATION_SIZE), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 90}, 20, 2, rl.DarkGray)
-        rl.DrawTextEx(customFont, fmt.Sprintf("Mutation rate: %f", MUTATION_RATE), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 60}, 20, 2, rl.DarkGray)
-        rl.DrawTextEx(customFont, fmt.Sprintf("Target: \"%s\"", target), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 30}, 20, 2, rl.DarkGray)
+		rl.DrawLine(0, SCREEN_HEIGHT-100, SCREEN_WIDTH, SCREEN_HEIGHT-100, rl.DarkGray)
+		rl.DrawTextEx(customFont, fmt.Sprintf("Population size: %d", POPULATION_SIZE), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 90}, 20, 2, rl.DarkGray)
+		rl.DrawTextEx(customFont, fmt.Sprintf("Mutation rate: %f", MUTATION_RATE), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 60}, 20, 2, rl.DarkGray)
+		rl.DrawTextEx(customFont, fmt.Sprintf("Target: \"%s\"", TARGET), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 30}, 20, 2, rl.DarkGray)
 
 		rl.EndDrawing()
 	}
-	//
-	// fmt.Println("\n\n Results: ")
-	// fmt.Println("\nGeneration: ", generation)
-	// fmt.Println("Best Fitness: ", population.GetMostFit().Fitness, " | Genes: ", population.GetMostFit().Genes)
-	fmt.Println(bestFitnessHistory)
 }

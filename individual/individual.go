@@ -52,12 +52,12 @@ func (p *Population) GeneratePopulationFitness(target string) {
 }
 
 func (p *Population) GetPopulationOrderedByFitness() Population {
-    // Sort population by fitness in descending order
+	// Sort population by fitness in descending order
 	sort.SliceStable(*p, func(i, j int) bool {
 		return (*p)[i].Fitness > (*p)[j].Fitness
 	})
 
-    return *p
+	return *p
 }
 func (p *Population) GenerateNextGeneration(mutationRate float32) {
 
@@ -66,14 +66,13 @@ func (p *Population) GenerateNextGeneration(mutationRate float32) {
 		totalFitness += individual.Fitness
 	}
 
-
-    // Sort population by fitness in descending order
-    *p = (*p).GetPopulationOrderedByFitness()
+	// Sort population by fitness in descending order
+	*p = (*p).GetPopulationOrderedByFitness()
 
 	// Create a new generation
 	nextGeneration := make(Population, 0, len(*p))
 
-    // Elitism, choose the best half of the population
+	// Elitism, choose the best half of the population
 	for i := 0; i < len(*p)/2; i++ {
 		nextGeneration = append(nextGeneration, (*p)[i])
 	}
@@ -144,11 +143,11 @@ func Crossover(parent1 *Individual, parent2 *Individual, mutationRate float32) *
 }
 
 func Mutate(individual *Individual, mutationRate float32) {
-    genes := []rune(individual.Genes)
+	genes := []rune(individual.Genes)
 	for i := 0; i < len(genes); i++ {
 		if rand.Float32() <= mutationRate {
-            genes[i] = RandomChar()
-            (*individual).Genes = string(genes)
+			genes[i] = RandomChar()
+			(*individual).Genes = string(genes)
 
 		}
 	}

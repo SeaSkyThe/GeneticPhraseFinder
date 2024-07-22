@@ -1,12 +1,35 @@
 # GeneticPhraseFinder
+
 A genetic algorithm to match a desired phrase implemented in Go.
 
 The visualization is done using [raylib-go](https://github.com/gen2brain/raylib-go).
+
+I made this algorithm just to have fun and took me like 4 hours to implement it, if you find some nasty code, please let me know.
+
+## Example
+
 
 ## How to run
 
 ```bash
 go run main.go
+```
+
+After running press SPACE to unpause/pause the execution.
+
+## Configuration
+
+The following constants can be changed to change the behavior of the genetic algorithm:
+
+```go
+const POPULATION_SIZE = 800
+const MUTATION_RATE = 0.03
+
+const SCREEN_WIDTH = 1050
+const SCREEN_HEIGHT = 700
+const UPDATE_INTERVAL = time.Millisecond * 5 // Screen update interval
+const MAX_HISTORY = 25
+const TARGET = "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
 ```
 
 ## How it works
@@ -25,4 +48,4 @@ The genetic algorithm is based on the following principles:
 ## References
 
 - [Genetic Algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm)
-- Genetic Algorithm - A Literature Review - DOI : *10.1109/COMITCon.2019.8862255*
+- Genetic Algorithm - A Literature Review - DOI : _10.1109/COMITCon.2019.8862255_
