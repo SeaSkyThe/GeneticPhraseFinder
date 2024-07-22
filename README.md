@@ -6,11 +6,7 @@ The visualization is done using [raylib-go](https://github.com/gen2brain/raylib-
 
 I made this algorithm just to have fun and took me like 4 hours to implement it, if you find some nasty code, please let me know.
 
-## Example
-
-
-https://github.com/user-attachments/assets/4352ab25-a6ab-491a-b7a9-1368e326fc1e
-
+https://github.com/user-attachments/assets/88c160af-19f3-48d9-a1f9-0f93ebdd2c81
 
 
 ## How to run
