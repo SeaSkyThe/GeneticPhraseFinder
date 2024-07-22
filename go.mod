@@ -1,4 +1,4 @@
-module github.com/seaskythe/GeneticGoViz
+module github.com/SeaSkyThe/GeneticPhraseFinder
 
 go 1.22.5
 

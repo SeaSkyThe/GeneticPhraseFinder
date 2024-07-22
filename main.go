@@ -1,86 +1,140 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/SeaSkyThe/GeneticPhraseFinder/individual"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-var (
-    RADIUS = 5.0
-    SPEED  = 5.0
-)
+const POPULATION_SIZE = 800
+const MUTATION_RATE = 0.03
 
-type Ball struct {
-	ballPosition rl.Vector2
-	ballSpeed    rl.Vector2
-	ballRadius   int
-}
-
-func spawnRandomBall(balls []*Ball) []*Ball {
-	var ballRadius int = 20
-	var ballPosition rl.Vector2 = rl.Vector2{X: float32(rl.GetRandomValue(int32(ballRadius), int32(rl.GetScreenWidth()-ballRadius))), Y: float32(rl.GetRandomValue(int32(ballRadius), int32(rl.GetScreenHeight()-ballRadius)))}
-	var ballSpeed rl.Vector2 = rl.Vector2{X: float32(rl.GetRandomValue(3, 8)), Y: float32(rl.GetRandomValue(3, 8))}
-
-	balls = append(balls, &Ball{ballPosition: ballPosition, ballSpeed: ballSpeed, ballRadius: ballRadius})
-
-	return balls
-}
-
-func checkBorderCollision(ballPosition rl.Vector2, ballRadius float32, ballSpeed *rl.Vector2) {
-	if (ballPosition.X >= (float32(rl.GetScreenWidth()) - float32(ballRadius))) || (ballPosition.X <= float32(ballRadius)) {
-		ballSpeed.X *= -1.0
-	}
-
-	if (ballPosition.Y >= (float32(rl.GetScreenHeight()) - float32(ballRadius))) || (ballPosition.Y <= float32(ballRadius)) {
-		ballSpeed.Y *= -1.0
-	}
-}
+const SCREEN_WIDTH = 1050
+const SCREEN_HEIGHT = 700
+const UPDATE_INTERVAL = time.Millisecond * 5
+const MAX_HISTORY = 25
 
 func main() {
 
-	rl.InitWindow(800, 450, "This is my future Genetic Algo Viz")
+	rl.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "This is my Genetic Algo Viz")
 	defer rl.CloseWindow()
-
 	rl.SetTargetFPS(60)
 
-	var pause bool = false
+	target := "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
+	population := individual.GeneratePopulation(POPULATION_SIZE, len(target))
+	population.GeneratePopulationFitness(target)
+
+	var pause bool = true
 	var framesCounter int = 0
+	var lastUpdate time.Time
+	var generation int = 0
 
-	var balls []*Ball
-	balls = spawnRandomBall(balls)
+	// List to store best fitness values of the last MAX_HISTORY generations
+	bestFitnessHistory := make([]individual.Individual, 0, MAX_HISTORY)
 
-	for !rl.WindowShouldClose() {
+	rl.BeginDrawing()
+	defer rl.EndDrawing()
+
+	rl.ClearBackground(rl.RayWhite)
+
+	customFont := rl.LoadFontEx("./RobotoMonoNerdFont-Regular.ttf", 20, nil, 0)
+
+    // customFont := rl.GetFontDefault()
+
+	for rl.WindowShouldClose() == false {
 		if rl.IsKeyPressed(rl.KeySpace) {
 			pause = !pause
 		}
 
-		if rl.IsKeyPressed(rl.KeyA) {
-			balls = spawnRandomBall(balls)
-		}
+		mostFit := population.GetMostFit()
+		if !pause && mostFit.Genes != target {
+			now := time.Now()
+			if now.Sub(lastUpdate) > UPDATE_INTERVAL {
+				mostFit = population.GetMostFit()
+				if mostFit == nil {
+					break
+				}
 
-		if !pause {
-			for _, ball := range balls {
-				ball.ballPosition.X += ball.ballSpeed.X
-				ball.ballPosition.Y += ball.ballSpeed.Y
-				checkBorderCollision(ball.ballPosition, float32(ball.ballRadius), &ball.ballSpeed)
+				population.GeneratePopulationFitness(target)
+				population.PrintPopulation()
+				// fmt.Printf("\rGeneration: %d | Best Fitness: %.6f | Genes: %s\033[K", generation, mostFit.Fitness, mostFit.Genes)
+				population.GenerateNextGeneration(MUTATION_RATE)
+				generation += 1
+
+				// Update best fitness history
+				if mostFit != nil {
+					bestFitnessHistory = append([]individual.Individual{*mostFit}, bestFitnessHistory...)
+					if len(bestFitnessHistory) > MAX_HISTORY {
+						bestFitnessHistory = bestFitnessHistory[:MAX_HISTORY]
+					}
+				}
+
+				lastUpdate = now
 			}
 		} else {
 			framesCounter += 1
+			if mostFit.Genes == target {
+				// Update best fitness history with the most fit individual
+				bestFitnessHistory = append([]individual.Individual{*mostFit}, bestFitnessHistory...)
+				if len(bestFitnessHistory) > MAX_HISTORY {
+					bestFitnessHistory = bestFitnessHistory[:MAX_HISTORY]
+				}
+			}
 		}
 
+		// Drawing data
 		rl.BeginDrawing()
-
 		rl.ClearBackground(rl.RayWhite)
-		// rl.DrawText("This is my future Genetic Algo Viz!", 190, 200, 20, rl.DarkGray)
-		//
-		for _, ball := range balls {
-			rl.DrawCircleV(ball.ballPosition, float32(ball.ballRadius), rl.Maroon)
+
+		mostFit = population.GetMostFit()
+		if mostFit != nil {
+			// rl.DrawText(fmt.Sprintf("Generation: %d", generation), 10, 10, 20, rl.DarkGray)
+			rl.DrawTextEx(customFont, fmt.Sprintf("Generation: %d", generation), rl.Vector2{10, 10}, 20, 2, rl.DarkGray)
+			// rl.DrawText(fmt.Sprintf("Best Fitness: %.6f", mostFit.Fitness), 10, 40, 20, rl.DarkGray)
+			rl.DrawTextEx(customFont, fmt.Sprintf("Best Fitness: %.6f", mostFit.Fitness), rl.Vector2{10, 40}, 20, 2, rl.DarkGray)
+			// rl.DrawText(fmt.Sprintf("Best %d Genes in Current Generation: ", MAX_HISTORY), 10, 70, 20, rl.DarkGray)
+			rl.DrawTextEx(customFont, fmt.Sprintf("Best %d Genes in Current Generation: ", MAX_HISTORY), rl.Vector2{X: 10, Y: 70}, 20, 2, rl.DarkGray)
+
+			for i, ind := range population.GetPopulationOrderedByFitness() {
+				if i < MAX_HISTORY {
+					yPosition := float32(95 + (i * 20))
+					if i == 0 {
+                        if mostFit.Genes == target { 
+                            rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Green)
+                        } else{
+                            rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Black)
+                        }
+					} else {
+						rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.DarkGray)
+					}
+				} else {
+					break
+				}
+			}
 		}
+
+		// Pause handling
 
 		if pause && ((framesCounter/30)%2) == 0 {
-			rl.DrawText("PAUSED", 350, 200, 30, rl.Gray)
+			rl.DrawText("PAUSED", int32(SCREEN_WIDTH/2-100), int32(SCREEN_HEIGHT/2-100), 30, rl.Gray)
 		}
-		rl.DrawFPS(10, 10)
+
+		rl.DrawFPS(int32(rl.GetScreenWidth())-100, 10)
+
+
+
+        rl.DrawLine(0, SCREEN_HEIGHT-100, SCREEN_WIDTH, SCREEN_HEIGHT-100, rl.DarkGray)
+        rl.DrawTextEx(customFont, fmt.Sprintf("Population size: %d", POPULATION_SIZE), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 90}, 20, 2, rl.DarkGray)
+        rl.DrawTextEx(customFont, fmt.Sprintf("Mutation rate: %f", MUTATION_RATE), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 60}, 20, 2, rl.DarkGray)
+        rl.DrawTextEx(customFont, fmt.Sprintf("Target: \"%s\"", target), rl.Vector2{X: 10, Y: SCREEN_HEIGHT - 30}, 20, 2, rl.DarkGray)
 
 		rl.EndDrawing()
 	}
+	//
+	// fmt.Println("\n\n Results: ")
+	// fmt.Println("\nGeneration: ", generation)
+	// fmt.Println("Best Fitness: ", population.GetMostFit().Fitness, " | Genes: ", population.GetMostFit().Genes)
+	fmt.Println(bestFitnessHistory)
 }
