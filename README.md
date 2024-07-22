@@ -9,6 +9,10 @@ I made this algorithm just to have fun and took me like 4 hours to implement it,
 ## Example
 
 
+https://github.com/user-attachments/assets/4352ab25-a6ab-491a-b7a9-1368e326fc1e
+
+
+
 ## How to run
 
 ```bash
