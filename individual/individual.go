@@ -1,6 +1,7 @@
 package individual
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -38,15 +39,11 @@ func (p Population) GetMostFit() *Individual {
 			best = individual
 		}
 	}
-	if best == nil {
-		return nil
-	}
 	return best
 }
 
 func (p *Population) GeneratePopulationFitness(target string) {
 	for _, individual := range *p {
-		// fmt.Println("Generating fitness for: ", individual.Genes)
 		(*individual).CalculateFitness(target)
 	}
 }
@@ -59,8 +56,8 @@ func (p *Population) GetPopulationOrderedByFitness() Population {
 
 	return *p
 }
-func (p *Population) GenerateNextGeneration(mutationRate float32) {
 
+func (p *Population) GenerateNextGeneration(mutationRate float32) error {
 	var totalFitness float32 = 0.0
 	for _, individual := range *p {
 		totalFitness += individual.Fitness
@@ -81,13 +78,17 @@ func (p *Population) GenerateNextGeneration(mutationRate float32) {
 	for i := len(*p) / 2; i < len(*p); i++ {
 		parent1 := p.rouletteWheelSelection(totalFitness)
 		parent2 := p.rouletteWheelSelection(totalFitness)
-		child := Crossover(parent1, parent2, mutationRate)
+		child, err := Crossover(parent1, parent2, mutationRate)
+		if err != nil {
+			return fmt.Errorf("Error generating crossover: %s", err)
+		}
 		Mutate(child, mutationRate)
 		nextGeneration = append(nextGeneration, child)
 	}
 
 	*p = nextGeneration
 
+	return nil
 }
 
 func (p Population) rouletteWheelSelection(totalFitness float32) *Individual {
@@ -132,14 +133,18 @@ func GenerateRandomGenes(genesSize int) string {
 	return genes
 }
 
-func Crossover(parent1 *Individual, parent2 *Individual, mutationRate float32) *Individual {
+func Crossover(parent1 *Individual, parent2 *Individual, mutationRate float32) (*Individual, error) {
+	if len(parent1.Genes) != len(parent2.Genes) {
+		return nil, errors.New("Parents must have the same length")
+	}
+
 	var child *Individual = NewIndividual("", 0)
 	var crossoverPoint int = len(parent1.Genes) / 2
 
 	child.Genes = parent1.Genes[0:crossoverPoint] + parent2.Genes[crossoverPoint:]
 	Mutate(child, mutationRate)
 
-	return child
+	return child, nil
 }
 
 func Mutate(individual *Individual, mutationRate float32) {
