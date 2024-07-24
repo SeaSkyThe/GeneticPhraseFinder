@@ -1,6 +1,6 @@
 # GeneticPhraseFinder
 
-A genetic algorithm to match a desired phrase implemented in Go.
+The simplest possible genetic algorithm to match a desired phrase implemented in Go.
 
 The visualization is done using [raylib-go](https://github.com/gen2brain/raylib-go).
 
