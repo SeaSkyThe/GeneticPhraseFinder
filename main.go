@@ -10,12 +10,12 @@ import (
 
 const POPULATION_SIZE = 2000
 const MUTATION_RATE = 0.03
+const TARGET = "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
 
 const SCREEN_WIDTH = 1050
 const SCREEN_HEIGHT = 700
 const UPDATE_INTERVAL = time.Millisecond * 5
 const MAX_HISTORY = 25
-const TARGET = "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
 
 func main() {
 
