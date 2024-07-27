@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+
+	"github.com/SeaSkyThe/GeneticPhraseFinder/mutator"
 )
 
 const EPSILON float32 = 0.001
-const CHARSET string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ,"
 
 type Individual struct {
 	Genes   string
@@ -82,7 +83,11 @@ func (p *Population) GenerateNextGeneration(mutationRate float32) error {
 		if err != nil {
 			return fmt.Errorf("Error generating crossover: %s", err)
 		}
-		Mutate(child, mutationRate)
+
+        // Mutation
+        mutator := *mutator.NewMutator(mutationRate)
+        child.Genes = mutator.RandomGenes(child.Genes)
+
 		nextGeneration = append(nextGeneration, child)
 	}
 
@@ -120,15 +125,10 @@ func GeneratePopulation(populationSize int, geneSize int) Population {
 	return population
 }
 
-func RandomChar() rune {
-	charset := []rune(CHARSET)
-	return charset[rand.Intn(len(charset))]
-}
-
 func GenerateRandomGenes(genesSize int) string {
 	var genes string = ""
 	for i := 0; i < genesSize; i++ {
-		genes += string(RandomChar())
+		genes += string(mutator.RandomChar())
 	}
 	return genes
 }
@@ -141,19 +141,13 @@ func Crossover(parent1 *Individual, parent2 *Individual, mutationRate float32) (
 	var child *Individual = NewIndividual("", 0)
 	var crossoverPoint int = len(parent1.Genes) / 2
 
-	child.Genes = parent1.Genes[0:crossoverPoint] + parent2.Genes[crossoverPoint:]
-	Mutate(child, mutationRate)
+    child.Genes = parent1.Genes[0:crossoverPoint] + parent2.Genes[crossoverPoint:]
+
+    // Mutation
+    mutator := *mutator.NewMutator(mutationRate)
+    child.Genes = mutator.RandomGenes(child.Genes)
 
 	return child, nil
 }
 
-func Mutate(individual *Individual, mutationRate float32) {
-	genes := []rune(individual.Genes)
-	for i := 0; i < len(genes); i++ {
-		if rand.Float32() <= mutationRate {
-			genes[i] = RandomChar()
-			(*individual).Genes = string(genes)
 
-		}
-	}
-}
