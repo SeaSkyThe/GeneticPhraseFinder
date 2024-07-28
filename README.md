@@ -1,11 +1,13 @@
 # GeneticPhraseFinder
 
-Blog Post: https://blog.seaskythe.com/go-genetic-algorithms/
+Related Blog Post: https://blog.seaskythe.com/go-genetic-algorithms/
+
 The simplest possible genetic algorithm to match a desired phrase implemented in Go.
 
 The visualization is done using [raylib-go](https://github.com/gen2brain/raylib-go).
 
 ~I made this algorithm just to have fun and took me like 4 hours to implement it, if you find some nasty code, please let me know.~
+
 I just made some changes to the code to make it more readable and to make it easier to understand. As well as to made it more extensible.
 
 <https://github.com/user-attachments/assets/88c160af-19f3-48d9-a1f9-0f93ebdd2c81>
