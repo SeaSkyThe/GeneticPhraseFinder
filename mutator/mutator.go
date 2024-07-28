@@ -31,21 +31,28 @@ func (m *Mutator) RandomGenes(genes string) string {
 }
 
 func (m *Mutator) SwapGenesPositions(genes string) string {
-	return m.applyMutation(genes, func(genes *[]rune, i int) {
-		SwapGenes(genes, i)
+	return m.applyMutation(genes, func(genesRunes *[]rune, i int) {
+		*genesRunes = SwapGenes(*genesRunes, i)
 	})
 }
 
+var charsetRunes = []rune(CHARSET)
+
 func RandomChar() rune {
-	charset := []rune(CHARSET)
-	return charset[rand.Intn(len(charset))]
+	return charsetRunes[rand.Intn(len(charsetRunes))]
 }
 
-func SwapGenes(genes *[]rune, i int) {
-	size := len(*genes)
+func SwapGenes(genes []rune, i int) []rune {
+	size := len(genes)
+	if size <= 1 {
+		return genes
+	}
+
 	randPos := rand.Intn(size)
 	for randPos == i {
 		randPos = rand.Intn(size)
 	}
-	(*genes)[i], (*genes)[randPos] = (*genes)[randPos], (*genes)[i]
+	(genes)[i], (genes)[randPos] = (genes)[randPos], (genes)[i]
+
+	return genes
 }

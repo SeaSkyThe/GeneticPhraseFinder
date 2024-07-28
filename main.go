@@ -11,9 +11,11 @@ import (
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
-const POPULATION_SIZE = 2000
-const MUTATION_RATE = 0.03
+const POPULATION_SIZE = 150
+const MUTATION_RATE = 0.015
 const TARGET = "Olha que coisa mais linda, Mais cheia de graca, E ela menina, Que vem e que passa"
+
+const MULTI_POINT_CROSSOVER_K = 4
 
 const SCREEN_WIDTH = 1050
 const SCREEN_HEIGHT = 700
@@ -61,11 +63,11 @@ func main() {
 				selector := selector.NewSelector()
 
 				// Reprodution + Mutation
-				reproductor := *reproductor.NewReproductor(population.GetTotalFitness())
+				reproductor := *reproductor.NewReproductor(population.GetTotalFitness(), MULTI_POINT_CROSSOVER_K)
 				mutator := *mutator.NewMutator(MUTATION_RATE)
 
 				population.GenerateNextGeneration(selector.ElitistSelection,
-					reproductor.SinglePointCrossover,
+					reproductor.MultiPointCrossover,
 					mutator.RandomGenes,
 					MUTATION_RATE)
 
