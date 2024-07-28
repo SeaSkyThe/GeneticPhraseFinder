@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/SeaSkyThe/GeneticPhraseFinder/individual"
+	"github.com/SeaSkyThe/GeneticPhraseFinder/mutator"
+	"github.com/SeaSkyThe/GeneticPhraseFinder/population"
+	"github.com/SeaSkyThe/GeneticPhraseFinder/reproductor"
+	"github.com/SeaSkyThe/GeneticPhraseFinder/selector"
 	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
@@ -23,8 +26,8 @@ func main() {
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
-	population := individual.GeneratePopulation(POPULATION_SIZE, len(TARGET))
-	population.GeneratePopulationFitness(TARGET)
+	population := population.GeneratePopulation(POPULATION_SIZE, len(TARGET))
+	population.CalculatePopulationFitness(TARGET)
 
 	var pause bool = true
 	var framesCounter int = 0
@@ -54,11 +57,23 @@ func main() {
 					break
 				}
 
-				population.GeneratePopulationFitness(TARGET)
-				population.PrintPopulation()
-				population.GenerateNextGeneration(MUTATION_RATE)
-				generation += 1
+				// Selection
+				selector := selector.NewSelector()
 
+				// Reprodution + Mutation
+				reproductor := *reproductor.NewReproductor(population.GetTotalFitness())
+				mutator := *mutator.NewMutator(MUTATION_RATE)
+
+				population.GenerateNextGeneration(selector.ElitistSelection,
+					reproductor.SinglePointCrossover,
+					mutator.RandomGenes,
+					MUTATION_RATE)
+
+				// Calculate Fitness
+				population.CalculatePopulationFitness(TARGET)
+				population.PrintPopulation()
+
+				generation += 1
 				lastUpdate = now
 			}
 		} else {
@@ -75,11 +90,11 @@ func main() {
 			rl.DrawTextEx(customFont, fmt.Sprintf("Best Fitness: %.6f", mostFit.Fitness), rl.Vector2{X: 10, Y: 40}, 20, 2, rl.DarkGray)
 			rl.DrawTextEx(customFont, fmt.Sprintf("Best %d Genes in Current Generation: ", MAX_HISTORY), rl.Vector2{X: 10, Y: 70}, 20, 2, rl.DarkGray)
 
-			for i, ind := range population.GetPopulationOrderedByFitness() {
+			for i, ind := range population.OrderByFitness() {
 				if i < MAX_HISTORY {
 					yPosition := float32(95 + (i * 20))
 					if i == 0 {
-						if mostFit.Genes == TARGET{
+						if mostFit.Genes == TARGET {
 							rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Green)
 						} else {
 							rl.DrawTextEx(customFont, fmt.Sprintf("[%2d]: %s", i+1, ind.Genes), rl.Vector2{X: 10, Y: yPosition}, 20, 2, rl.Black)
