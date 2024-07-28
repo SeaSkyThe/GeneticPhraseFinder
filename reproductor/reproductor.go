@@ -103,6 +103,30 @@ func (r *Reproductor) MultiPointCrossover(pop population.Population, mutationMet
 	})
 }
 
+func (r *Reproductor) OrderCrossover(pop population.Population, mutationMethod func(genes string) string) (population.Population, error) {
+	return r.Reproduce(pop, func(parent1 *individual.Individual, parent2 *individual.Individual) (*individual.Individual, error) {
+		if len(parent1.Genes) != len(parent2.Genes) {
+			return nil, errors.New("Parents must have the same length")
+		}
+
+		var crossoverPoint1 int = rand.Intn(len(parent1.Genes)/2)
+		var crossoverPoint2 int = rand.Intn(len(parent2.Genes)/2) + len(parent1.Genes)/2
+
+		for crossoverPoint1 == crossoverPoint2 {
+			crossoverPoint2 = rand.Intn(len(parent2.Genes))
+		}
+
+		childGenes := parent2.Genes[:crossoverPoint1] + parent1.Genes[crossoverPoint1:crossoverPoint2] + parent2.Genes[crossoverPoint2:]
+
+		// Mutation
+		childGenes = mutationMethod(childGenes)
+
+		child := individual.NewIndividual(childGenes, 0)
+
+		return child, nil
+	})
+}
+
 // Other reproduction methods in the format:
 // func (Population, func(string) string) (Population, error)
 

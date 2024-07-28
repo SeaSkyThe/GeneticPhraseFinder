@@ -67,7 +67,7 @@ func main() {
 				mutator := *mutator.NewMutator(MUTATION_RATE)
 
 				population.GenerateNextGeneration(selector.ElitistSelection,
-					reproductor.MultiPointCrossover,
+					reproductor.OrderCrossover,
 					mutator.RandomGenes,
 					MUTATION_RATE)
 
